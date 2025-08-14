@@ -1,5 +1,5 @@
 resource "grafana_contact_point" "my_contact_point" {
-  name = "My Contact Point"
+  name = "Test Contact Point 5"
 
   email {
     addresses               = ["jpx2b1@gmail.com", "two@company.org"]
