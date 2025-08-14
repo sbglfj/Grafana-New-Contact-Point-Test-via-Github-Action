@@ -1,1 +1,52 @@
+name: Terraform CI/CD
 
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+  pull_request:
+    branches:
+      - main # Trigger on pull requests targeting the main branch
+
+env:
+  TF_LOG: INFO # Enable verbose Terraform logging
+  TF_INPUT: false # Disable interactive prompts for Terraform
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest # Use a Linux-based runner
+
+    defaults:
+      run:
+        shell: bash # Use Bash as the default shell for all steps
+        working-directory: ./terraform # Set the working directory for Terraform files
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Checkout the repository code
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3 # Install a specific version of Terraform CLI
+        with:
+          terraform_version: 1.x.x # Specify your desired Terraform version
+
+      - name: Terraform Init
+        id: init
+        run: terraform init # Initialize the Terraform working directory
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check # Check Terraform code formatting
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color # Validate the Terraform configuration
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request' # Only run plan on pull requests
+        run: terraform plan -no-color -out=tfplan # Generate a Terraform plan
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only apply on pushes to main
+        run: terraform apply -auto-approve tfplan # Apply the Terraform plan (requires a generated plan or direct application)
